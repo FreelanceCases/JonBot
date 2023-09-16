@@ -29,38 +29,65 @@ def bonus_history(id):
     connection = pyodbc.connect(get_string(), autocommit=True)
     cursor = connection.cursor()
 
-    # Выполните хранимую процедуру с аргументами
-    # param1_value = 'some_value'
-    cursor.execute("{CALL my_stored_procedure(?)}", (id,))
+    try:
+
+        # Выполните хранимую процедуру с аргументами
+        # param1_value = 'some_value'
+        cursor.execute("{CALL proc_hist_bonus_pokupatel(?)}", (id,))
+        return cursor.fetchall()
+    
+    except Exception as e:
+        print(e)
+    
+    finally:
+        cursor.close()
+        connection.close()
 
 
-    cursor.close()
-    connection.close()
-    return cursor.fetch_all()
-
-
-def bonus_balance(id):
+def bonus_balance(chat_id):
     connection = pyodbc.connect(get_string(), autocommit=True)
     cursor = connection.cursor()
-
-    # Выполните хранимую процедуру с аргументами
-    # param1_value = 'some_value'
-    cursor.execute("{CALL my_stored_procedure(?)}", (id,))
-
-
-    cursor.close()
-    connection.close()
-    return cursor.fetch_all()
+    id = get_id_by_chat_id(chat_id)
+    try:
+        # Выполните хранимую процедуру с аргументами
+        # param1_value = 'some_value'
+        cursor.execute("{CALL proc_bonus_pokupatel(?)}", (id,))
+        return cursor.fetchone()[0]
+    
+    except Exception as e:
+        print(e)
+    
+    finally:
+        cursor.close()
+        connection.close()
+    
 
 
 def check_user(number):
     if get_chat_id_by_number(number) is not None:
-        print("Authentificated")
+        return True
     else: 
-        print("Not authenticated")
+        return False
 
 
+def create_user(number, chat_id):
+    connection = pyodbc.connect(get_string(), autocommit=True)
+    cursor = connection.cursor()
+    try: 
+        
+        query = "INSERT INTO new_users VALUES(?, ?)"
 
+        cursor.execute(query, (chat_id, number))
+    
+    except Exception as e:
+        print("Error:", e)
+        return None
+
+    finally:
+        # Close the cursor and database connection
+        cursor.close()
+        connection.close()
+     
 
 
 def get_chat_id_by_number(number):
@@ -72,10 +99,48 @@ def get_chat_id_by_number(number):
         # cursor = conn.cursor()
 
         # Define your SQL query to retrieve chat_id based on the number
-        query = "SELECT chat_id FROM YOUR_TABLE WHERE number = ?"
+        query = "SELECT TelegramId FROM Pokupatel WHERE TelegramNumber =?"
+        
+        # print(number)
+        # Execute the query with the provided number as a parameter
+        cursor.execute(query, str(number))
+        # Fetch the result (assuming there is only one row with this number)
+        row = cursor.fetchone()
+        # print(row)
+
+
+        if row:
+            # Extract chat_id from the result
+            chat_id = row[0]
+            return chat_id
+        else:
+            return None
+
+    except Exception as e:
+        print("Error:", e)
+        return None
+
+    finally:
+        # Close the cursor and database connection
+        cursor.close()
+        connection.close()
+
+
+
+def check_user_by_chat_id(chat_id):
+    connection = pyodbc.connect(get_string(), autocommit=True)
+    cursor = connection.cursor()
+
+    try:
+        # Create a cursor to execute SQL queries
+        # cursor = conn.cursor()
+
+        # Define your SQL query to retrieve chat_id based on the number
+        # Select TelegramId, TelegramNumber from Pokupatel where TelegramNumber=79266390551;
+        query = "Select TelegramNumber from Pokupatel WHERE TelegramId=" + str(chat_id)
         
         # Execute the query with the provided number as a parameter
-        cursor.execute(query, (number,))
+        cursor.execute(query)
 
         # Fetch the result (assuming there is only one row with this number)
         row = cursor.fetchone()
@@ -97,3 +162,144 @@ def get_chat_id_by_number(number):
         connection.close()
 
 
+def get_chat_id_by_number(number):
+    connection = pyodbc.connect(get_string(), autocommit=True)
+    cursor = connection.cursor()
+
+    try:
+        # Create a cursor to execute SQL queries
+        # cursor = conn.cursor()
+
+        # Define your SQL query to retrieve chat_id based on the number
+        query = "SELECT TelegramId FROM Pokupatel WHERE TelegramNumber =?"
+        
+        # print(number)
+        # Execute the query with the provided number as a parameter
+        cursor.execute(query, str(number))
+        # Fetch the result (assuming there is only one row with this number)
+        row = cursor.fetchone()
+        # print(row)
+
+
+        if row:
+            # Extract chat_id from the result
+            chat_id = row[0]
+            return chat_id
+        else:
+            return None
+
+    except Exception as e:
+        print("Error:", e)
+        return None
+
+    finally:
+        # Close the cursor and database connection
+        cursor.close()
+        connection.close()
+
+
+
+def get_id_by_chat_id(chat_id):
+    connection = pyodbc.connect(get_string(), autocommit=True)
+    cursor = connection.cursor()
+
+    try:
+        # Create a cursor to execute SQL queries
+        # cursor = conn.cursor()
+
+        # Define your SQL query to retrieve chat_id based on the number
+        # Select TelegramId, TelegramNumber from Pokupatel where TelegramNumber=79266390551;
+        query = "Select id from Pokupatel WHERE TelegramId=" + str(chat_id)
+        
+        # Execute the query with the provided number as a parameter
+        cursor.execute(query)
+
+        # Fetch the result (assuming there is only one row with this number)
+        row = cursor.fetchone()
+
+        if row:
+            # Extract chat_id from the result
+            chat_id = row[0]
+            return chat_id
+        else:
+            return None
+
+    except Exception as e:
+        print("Error:", e)
+        return None
+
+    finally:
+        # Close the cursor and database connection
+        cursor.close()
+        connection.close()
+
+
+def get_codes():
+    connection = pyodbc.connect(get_string(), autocommit=True)
+    cursor = connection.cursor()
+    try:
+        query = "Select pokupatelId, code, send_date from bot_confirmation_code" #where send_date=NULL
+        cursor.execute(query)
+        return cursor.fetchall()
+                
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        connection.close()
+
+
+
+def get_chat_id_by_id(chat_id):
+    connection = pyodbc.connect(get_string(), autocommit=True)
+    cursor = connection.cursor()
+
+    try:
+        # Create a cursor to execute SQL queries
+        # cursor = conn.cursor()
+
+        # Define your SQL query to retrieve chat_id based on the number
+        # Select TelegramId, TelegramNumber from Pokupatel where TelegramNumber=79266390551;
+        query = "Select TelegramId from Pokupatel WHERE id=" + str(chat_id)
+        
+        # Execute the query with the provided number as a parameter
+        cursor.execute(query)
+
+        # Fetch the result (assuming there is only one row with this number)
+        row = cursor.fetchone()
+
+        if row:
+            # Extract chat_id from the result
+            chat_id = row[0]
+            return chat_id
+        else:
+            return None
+
+    except Exception as e:
+        print("Error:", e)
+        return None
+
+    finally:
+        # Close the cursor and database connection
+        cursor.close()
+        connection.close()
+
+
+
+def update_timestamp(id):
+    connection = pyodbc.connect(get_string(), autocommit=True)
+    cursor = connection.cursor()
+
+    try:
+        query = "Update bot_confirmation_code Set send_date=CURRENT_TIMESTAMP Where pokupatelId=" + str(id)
+        cursor.execute(query)
+        
+    except Exception as e:
+        print("Error:", e)
+        return None
+
+    finally:
+        # Close the cursor and database connection
+        cursor.close()
+        connection.close()
