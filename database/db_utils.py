@@ -294,7 +294,41 @@ def update_timestamp(id):
     try:
         query = "Update bot_confirmation_code Set send_date=CURRENT_TIMESTAMP Where pokupatelId=" + str(id)
         cursor.execute(query)
-        
+
+    except Exception as e:
+        print("Error:", e)
+        return None
+
+    finally:
+        # Close the cursor and database connection
+        cursor.close()
+        connection.close()
+
+
+def get_broadcast():
+    connection = pyodbc.connect(get_string(), autocommit=True)
+    cursor = connection.cursor()
+    try:
+        query = "Select pokupatelId, send_date, body, image  from bot_broadcaster" #where send_date=NULL
+        cursor.execute(query)
+        return cursor.fetchall()
+                
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        connection.close()
+
+
+def update_timestamp_for_broadcast(id):
+    connection = pyodbc.connect(get_string(), autocommit=True)
+    cursor = connection.cursor()
+
+    try:
+        query = "Update bot_broadcaster Set send_date=CURRENT_TIMESTAMP Where pokupatelId=" + str(id)
+        cursor.execute(query)
+
     except Exception as e:
         print("Error:", e)
         return None

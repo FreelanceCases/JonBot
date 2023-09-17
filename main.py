@@ -52,7 +52,6 @@ def text_react(message):
         if message.text in text.mainMarkupText:
             
             if message.text == "История операций":
-                # TODO: Request to db 
                 bot.send_message(chat_id=chat_id, text=bonus_history_formatter(db_utils.bonus_history(chat_id)), reply_markup=markups.menu_markup())
             
             if message.text == "Остаток бонусов":
@@ -69,10 +68,19 @@ def code_sender():
             bot.send_message(chat_id=chat_id, text="Код подтверждения: " + str(code), reply_markup=markups.menu_markup())
 
 
+def broadcast_sender():
+    arr = db_utils.get_broadcast()
+    for (id, date, body, image) in arr:
+        if date is None:
+            chat_id = db_utils.get_chat_id_by_id(id)
+            if image is None:
+                bot.send_message(chat_id=chat_id, text=body, reply_markup=markups.menu_markup())
+            else: 
+                bot.send_photo(chat_id=chat_id, photo=image, caption=body)
+            db_utils.update_timestamp_for_broadcast(id)
 
 
 # For multythreading
-
 def t1_func():
     while True:
         code_sender()
@@ -80,12 +88,22 @@ def t1_func():
 def t2_func():
     bot.polling(none_stop=True)
 
+
+def t3_func():
+    while True:
+        broadcast_sender()
+
+
 t1 = threading.Thread(target=t1_func)
 t2 = threading.Thread(target=t2_func)
+t3 = threading.Thread(target=t3_func)
+
 
 t1.daemon = True
+t3.daemon = True
 t1.start()
 t2.start()
+t3.start()
 
 
 
